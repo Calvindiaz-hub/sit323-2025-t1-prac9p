@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodeapp
+  labels:
+    app: nodeapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nodeapp
+  template:
+    metadata:
+      labels:
+        app: nodeapp
+    spec:
+      containers:
+        - name: nodeapp
+          image: calvindiaz/my-web-app:latest
+          imagePullPolicy: Always # Or Never if using minikube local image
+          ports:
+            - containerPort: 3000
+          env:
+            - name: MONGODB_URI
+              value: "mongodb://appuser:apppassword@mongodb:27017/appdb?authSource=admin&retryWrites=true&w=majority"
+            - name: MONGODB_DB
+              value: "appdb"
+            - name: PORT
+              value: "3000"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
